@@ -17,13 +17,10 @@ locals {
   vpc_cidr    = "172.31.0.0/24"
   azs         = ["us-east-1a", "us-east-1b"]
 
-  # 3 tier architecture
   public_subnet_1 = "172.31.0.0/26"      # Public subnet for AZ1
   public_subnet_2 = "172.31.0.64/26"     # Public subnet for AZ2
-  private_subnet_web_1 = "172.31.0.128/26"  # Web server subnet in AZ1
-  private_subnet_web_2 = "172.31.0.192/26"  # Web server subnet in AZ2
-  private_subnet_db_1 = "172.31.1.0/26"    # DB subnet in AZ1
-  private_subnet_db_2 = "172.31.1.64/26"   # DB subnet in AZ2
+  private_subnet_1 = "172.31.0.128/26"   # Private subnet for AZ1
+  private_subnet_2 = "172.31.0.192/26"   # Private subnet for AZ2
 }
 
 provider "aws" {
@@ -32,6 +29,8 @@ provider "aws" {
 
 ########################################
 # VPC Module
+# VPC Module already create and associate route table and internet gateway
+# -> so just focus on Security
 ########################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -41,10 +40,8 @@ module "vpc" {
   cidr                = local.vpc_cidr
   azs                 = local.azs
   public_subnets      = [local.public_subnet_1, local.public_subnet_2]  # Two public subnets
-  private_subnets     = [
-    local.private_subnet_web_1, local.private_subnet_web_2,  # Web server subnets
-    local.private_subnet_db_1, local.private_subnet_db_2     # DB subnets
-  ]
+  private_subnets     = [local.private_subnet_1, local.private_subnet_2] # Two private subnets
+
   enable_nat_gateway   = false  # NAT Gateway disabled
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -53,6 +50,8 @@ module "vpc" {
 ########################################
 # Application Load Balancer (ALB)
 ########################################
+
+# ALB Security Group (Allow HTTP and HTTPS traffic)
 resource "aws_lb" "main" {
   name               = "my-alb"
   internal           = false  # Public ALB
@@ -62,7 +61,7 @@ resource "aws_lb" "main" {
   # Specify two public subnets in different AZs for the ALB
   subnets            = [
     module.vpc.public_subnets[0],  # Public subnet in AZ1
-    module.vpc.public_subnets[1]   # Public subnet in AZ2
+    module.vpc.public_subnets[1]   # Public subnet in AZ2 (You may need to create this subnet if it doesn't exist)
   ]
 
   enable_deletion_protection    = false
@@ -101,6 +100,8 @@ resource "aws_lb_listener" "https_listener" {
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
 
+
+  # You can optionally set a fixed response instead of forwarding to a target group
   default_action {
     type = "fixed-response"
     fixed_response {
@@ -111,6 +112,9 @@ resource "aws_lb_listener" "https_listener" {
   }
 }
 
+
+
+
 ########################################
 # Auto Scaling Group
 ########################################
@@ -119,8 +123,8 @@ resource "aws_autoscaling_group" "web" {
   max_size            = 5
   min_size            = 2
   vpc_zone_identifier = [
-    module.vpc.private_subnets[0],  # Web server subnet in AZ1
-    module.vpc.private_subnets[1]   # Web server subnet in AZ2
+    module.vpc.private_subnets[0],  # Private subnet in AZ1
+    module.vpc.private_subnets[1]   # Private subnet in AZ2
   ]
   
   launch_template {
@@ -134,6 +138,8 @@ resource "aws_autoscaling_group" "web" {
   # Attach the target group to the Auto Scaling Group
   target_group_arns = [aws_lb_target_group.web_target_group.arn]
 }
+
+
 
 ########################################
 # Security Groups
@@ -185,6 +191,7 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
+
 resource "aws_security_group" "rds_sg" {
   name        = "rds-sg"
   description = "Allow MySQL traffic"
@@ -206,13 +213,17 @@ resource "aws_security_group" "rds_sg" {
 }
 
 ########################################
-# EC2 Instances for Bastion Host
+# EC2
 ########################################
 resource "aws_key_pair" "bastion_key" {
   key_name   = "bastion-keypair"
   public_key = file("~/.ssh/id_rsa.pub") # Path to your existing public key or generate one
 }
 
+
+########################################
+# EC2 Instances for Bastion Host
+########################################
 resource "aws_instance" "bastion" {
   ami           = "ami-012967cc5a8c9f891"
   instance_type = "t2.micro"
@@ -244,22 +255,20 @@ resource "aws_launch_template" "web-server" {
   }
 }
 
+
+
 ########################################
 # RDS
 ########################################
 resource "aws_db_subnet_group" "my_db_subnet_group" {
   name        = "my-db-subnet-group"
   description = "My DB Subnet Group for private subnets"
-  subnet_ids  = [
-    module.vpc.private_subnets[2],  # DB subnet in AZ1
-    module.vpc.private_subnets[3]   # DB subnet in AZ2
-  ]
+  subnet_ids  = module.vpc.private_subnets
 
   tags = {
     Name = "my-db-subnet-group"
   }
 }
-
 
 resource "aws_db_instance" "myrds" {
   engine               = "mysql"
@@ -270,7 +279,7 @@ resource "aws_db_instance" "myrds" {
   db_name             = "todolist"
   instance_class      = "db.t3.micro"
   username            = "admin"
-  password            = "1234"  # Changed to meet minimum requirements
+  password            = "Password123!"  # Changed to meet minimum requirements
   publicly_accessible = false
   multi_az            = true
   
