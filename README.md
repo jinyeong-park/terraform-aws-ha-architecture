@@ -1,4 +1,7 @@
 # terraform-aws
+####
+For sample web app with db - https://github.com/jinyeong-park/simple-web-app-with-db
+
 #### Terraform Setup
 ```
 cd terraform
