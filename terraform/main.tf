@@ -17,13 +17,20 @@ locals {
   vpc_cidr    = "172.31.0.0/24"
   azs         = ["us-east-1a", "us-east-1b"]
 
-  # 3 tier architecture
-  public_subnet_1 = "172.31.0.0/26"      # Public subnet for AZ1
-  public_subnet_2 = "172.31.0.64/26"     # Public subnet for AZ2
-  private_subnet_web_1 = "172.31.0.128/26"  # Web server subnet in AZ1
-  private_subnet_web_2 = "172.31.0.192/26"  # Web server subnet in AZ2
-  private_subnet_db_1 = "172.31.1.0/26"    # DB subnet in AZ1
-  private_subnet_db_2 = "172.31.1.64/26"   # DB subnet in AZ2
+  # 3 tier architecture with /27 subnets => NAT Gateway Trouble shooting
+  public_subnet_1 = "172.31.0.0/27"      # Public subnet for AZ1
+  public_subnet_2 = "172.31.0.32/27"     # Public subnet for AZ2
+  private_subnet_web_1 = "172.31.0.64/27"  # Web server subnet in AZ1
+  private_subnet_web_2 = "172.31.0.96/27"  # Web server subnet in AZ2
+  private_subnet_db_1 = "172.31.0.128/27"  # DB subnet in AZ1
+  private_subnet_db_2 = "172.31.0.160/27"  # DB subnet in AZ2
+
+  # subnet줄이고, Bastion subnet에 조금 더 작은량 할당
+  public_subnet_1 = "172.31.0.0/26"  # Bastion subnet for AZ1
+  public_subnet_2 = "172.31.0.64/26" # Public subnet for AZ2
+  private_subnet_1 = "172.31.0.128/26" # Web and db subnet in AZ1
+  private_subnet_2 = "172.31.0.192/26" # Web and db subnet in AZ2
+
 }
 
 provider "aws" {
@@ -49,6 +56,7 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
+
 
 ########################################
 # Application Load Balancer (ALB)
@@ -95,21 +103,7 @@ resource "aws_lb_listener" "web_listener" {
   }
 }
 
-resource "aws_lb_listener" "https_listener" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
 
-  default_action {
-    type = "fixed-response"
-    fixed_response {
-      status_code = 200
-      content_type = "text/plain"
-      message_body = "HTTPS listener is configured."
-    }
-  }
-}
 
 ########################################
 # Auto Scaling Group
@@ -270,7 +264,7 @@ resource "aws_db_instance" "myrds" {
   db_name             = "todolist"
   instance_class      = "db.t3.micro"
   username            = "admin"
-  password            = "1234"  # Changed to meet minimum requirements
+  password            = "newpassword123"  # Changed to meet minimum requirements
   publicly_accessible = false
   multi_az            = true
   
@@ -285,4 +279,4 @@ resource "aws_db_instance" "myrds" {
   final_snapshot_identifier = "todolist-db-final-snapshot"
 }
 
-
+## DB - us-east-1b만 생성됨
