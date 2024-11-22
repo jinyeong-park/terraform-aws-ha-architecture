@@ -1,8 +1,5 @@
-# AWS High avaailablity (HA) Architecture with terraform-aws
-Implement a website with a database interface in the AWS environment.
-The infrastructure should be configured with High Availability (AZ) as the default and must include Load Balancing. The database should be configured with an Active-Standby setup.
-Both the web and database must not be directly accessible from outside (should be placed in a Private Subnet), and access should be enabled via a Bastion Host.
-You can choose the operating system and database that you are most comfortable working with. However, for the database, it must be implemented using RDS, and Oracle is excluded.
+# AWS High avaailablity (HA) Architecture with terraform
+Build a website with a database interface in AWS. The infrastructure must have High Availability (AZ), Load Balancing, and an Active-Standby database setup. The web and database should be in Private Subnets, not directly accessible from the outside, with access enabled via a Bastion Host. You can choose the operating system and database you're comfortable with, but the database must be implemented using RDS (Oracle excluded). A simple webpage should be created to show that the architecture works as expected.
 
 ### Requirement
 
