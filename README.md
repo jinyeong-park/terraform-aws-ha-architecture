@@ -46,13 +46,8 @@ terraform/                  # Terraform code directory
 └── outputs.tf              # Output values (e.g., DB URL, load balancer URL, etc.)
 
 
-#### Useful Resources for Terraform
-- [Terraform doc for AWS - Prerequisites](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/aws-build)
-- [Terraform registry AWS](https://registry.terraform.io/providers/hashicorp/aws/latest)
-- [Terraform syntax](https://developer.hashicorp.com/terraform/language)
-
-<!-- 시간 되면.... 밑의 구조로 수정 -->
-<!-- terraform/                         # Terraform code for provisioning AWS resources
+###### More Optimized Terraform Folder Structure
+terraform/                         # Terraform code for provisioning AWS resources
     ├── modules/                   # Reusable Terraform modules
     │   ├── vpc/                   # VPC and subnet configuration
     │   │   ├── main.tf            # VPC, subnets, route tables
@@ -70,7 +65,14 @@ terraform/                  # Terraform code directory
     ├── provider.tf                # AWS provider configuration
     ├── variables.tf               # Variables (e.g., region, instance types)
     ├── outputs.tf                 # Outputs (e.g., DB endpoint, ALB URL)
-    └── terraform_backend.tf       # Backend configuration (optional, for remote state management) -->
+    └── terraform_backend.tf       # Backend configuration (optional, for remote state management)
+
+#### Useful Resources for Terraform
+- [Terraform doc for AWS - Prerequisites](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/aws-build)
+- [Terraform registry AWS](https://registry.terraform.io/providers/hashicorp/aws/latest)
+- [Terraform syntax](https://developer.hashicorp.com/terraform/language)
+
+
 
 #### User data example 1 when creating an EC2 instance - public
 ```
