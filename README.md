@@ -67,7 +67,7 @@ terraform/                             # Terraform code for provisioning AWS res
     ├── variables.tf                   # Variables (e.g., region, instance types)
     ├── outputs.tf                     # Outputs (e.g., DB endpoint, ALB URL)
     └── terraform_backend.tf           # Backend configuration (optional, for remote state management)
-
+```
 
 #### Useful Resources for Terraform
 - [Terraform doc for AWS - Prerequisites](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/aws-build)
