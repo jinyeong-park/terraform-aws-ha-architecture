@@ -19,9 +19,12 @@ Build a website with a database interface in AWS. The infrastructure must have H
 
 
 
-### AWS Architecture diagram
-![AWS-HA-architecture-bastion-host](./img/AWS-HA-architecture-bastion-host.png)
+### AWS Three Tier Architecture diagram
+![AWS-3-tier-architecture](./img/AWS-three-tier-applicatioin.gif)
 
+### AWS Architecture diagram
+For demo purposes, I made it simpler.
+![AWS-HA-architecture-bastion-host](./img/AWS-HA-architecture-bastion-host.png)
 
 #### Terraform Setup
 ```
